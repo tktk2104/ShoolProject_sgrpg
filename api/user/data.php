@@ -1,50 +1,61 @@
-<?php
-/* MySQLに接続したデータを取得する */
+<?php // MySQLに接続したデータを取得する
 
 // 外部ファイルの読み込み
 require_once("../utility.php");
+require_once("../../model/userModel.php");
 
 // 以下のコメントを外すと実行時エラーが発生した際にエラー内容が表示される
 // ini_set('display_errors', 'On');
 // ini_set('error_reporting', E_ALL);
 
-//-------------------------------------------------
-/* 実行したいSQL */
-	// Userテーブルの指定列を取得
-	$sql = 'SELECT * FROM user WHERE id=:id';
-//-------------------------------------------------
+// GETコマンドでトークンを受け取る
+$token = UserModel::getTokenfromQuery();
 
-// ユーザーIDを受け取る
-$uid = isset($_GET['uid'])?  $_GET['uid']:null;
-
-// 入力が正しいかの判定
-if( ($uid === null) || (!is_numeric($uid)) )
+// トークンを受け取れなかった場合
+if(!$token)
 {
-  sendResponse(false, 'Invalid uid');
-  exit(1);
+	// エラーを返して終了する
+	sendResponse(false, 'Invalid token');
+	exit(1);
 }
 
 // SQLを実行
 try
 {
-	// データベースへのアクセスを開始する
-	$dbh = beginAccess();
-	
-	// 指定のsql文を実行する
-	$sth = $dbh->prepare($sql);
-	$sth->bindValue(':id', $uid, PDO::PARAM_INT);
-	$sth->execute();
+	$user = new UserModel();
 
-	// 結果を取得する
-	$buff = $sth->fetch(PDO::FETCH_ASSOC);
+	// トークンからユーザーIDを取得する
+	$uid  = $user->getUserIdByToken($token);
+
+	// ユーザーIDを取得出来ていたら
+	if( $uid !== false )
+	{
+		$baseUserData = $user->getRecordById($uid);
+		$userCharecterIdArray = $user->getUserCharacters($uid);
+  
+		$buff = $baseUserData;
+		  
+		$buff["chara"] = $userCharecterIdArray;
+	}
+	else
+	{
+		// ユーザーIDの取得に失敗していた場合はbool型でfalseを返す
+	  	$buff = false;
+	}
 }
 catch( PDOException $e )
 {
-	sendResponse(false, 'Database error: '.$e->getMessage());  // 本来エラーメッセージはサーバ内のログへ保存する(悪意のある人間にヒントを与えない)
+	// 本来エラーメッセージはサーバ内のログへ保存する(悪意のある人間にヒントを与えない)
+	sendResponse(false, 'Database error: '.$e->getMessage());
 	exit(1);
 }
 
-// 実行結果を返却
-returnResult($buff);
-
-
+// 取得に失敗していた場合
+if( $buff === false )
+{
+	sendResponse(false, 'Not Found user');
+}
+else
+{
+	sendResponse(true, $buff);
+}

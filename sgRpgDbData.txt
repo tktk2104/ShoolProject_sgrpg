@@ -2,23 +2,24 @@ CREATE DATABASE sgrpg;
 USE sgrpg;
 
 CREATE TABLE user(
-    id 	integer AUTO_INCREMENT,
-    lv 	integer,
+    id 	    integer         AUTO_INCREMENT,
+    lv 	    integer,
     exp 	integer,
     money 	integer,
+    token 	varchar(128),
 
     PRIMARY KEY(id) 
 );
 
 CREATE TABLE characterData(
-    id 	integer AUTO_INCREMENT,
+    id 	    integer         AUTO_INCREMENT,
     name 	varchar(64),
 
     PRIMARY KEY(id)
 );
 
 CREATE TABLE userChara(
-    id 		integer AUTO_INCREMENT,
+    id 		    integer     AUTO_INCREMENT,
     user_id 	integer,
     chara_id 	integer,
 
