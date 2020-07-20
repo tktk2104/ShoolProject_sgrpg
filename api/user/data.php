@@ -3,6 +3,7 @@
 // 外部ファイルの読み込み
 require_once("../utility.php");
 require_once("../../model/userModel.php");
+require_once('../../model/characterModel.php');
 
 // 以下のコメントを外すと実行時エラーが発生した際にエラー内容が表示される
 // ini_set('display_errors', 'On');
@@ -24,6 +25,8 @@ try
 {
 	$user = new UserModel();
 
+	$character = new CharacterModel();
+
 	// トークンからユーザーIDを取得する
 	$uid  = $user->getUserIdByToken($token);
 
@@ -32,10 +35,10 @@ try
 	{
 		$baseUserData = $user->getRecordById($uid);
 		$userCharecterIdArray = $user->getUserCharacters($uid);
-  
+		$characterNameArray = $character->getUserCharacterNames($userCharecterIdArray);
+
 		$buff = $baseUserData;
-		  
-		$buff["chara"] = $userCharecterIdArray;
+		$buff["chara"] = $characterNameArray;
 	}
 	else
 	{
